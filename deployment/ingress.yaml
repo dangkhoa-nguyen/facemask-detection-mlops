@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
-  name: facemask-api-ingress
+  name: facemask-ingress
   namespace: facemask
 
 spec:
@@ -11,11 +11,35 @@ spec:
   rules:
     - http:
         paths:
-          - path: /
-            pathType: Prefix
 
+          - path: /docs
+            pathType: Prefix
             backend:
               service:
                 name: facemask-api-service
                 port:
                   number: 8000
+
+          - path: /predict
+            pathType: Prefix
+            backend:
+              service:
+                name: facemask-api-service
+                port:
+                  number: 8000
+
+          - path: /models
+            pathType: Prefix
+            backend:
+              service:
+                name: facemask-api-service
+                port:
+                  number: 8000
+
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: facemask-demo-service
+                port:
+                  number: 8501
