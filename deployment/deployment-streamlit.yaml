@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: facemask-demo
+  namespace: facemask
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: facemask-demo
+
+  template:
+    metadata:
+      labels:
+        app: facemask-demo
+
+    spec:
+      containers:
+        - name: facemask-demo
+
+          image: ngdangkhoa/facemask-demo:v1
+
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8501
+
+          env:
+            - name: API_URL
+              value: "http://facemask-api-service:8000"
