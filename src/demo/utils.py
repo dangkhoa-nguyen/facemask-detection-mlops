@@ -11,28 +11,21 @@ API_URL = os.getenv(
     "http://127.0.0.1:8000"
 )
 
+    
 def get_available_models():
     """
     Automatically discover available ONNX models
     from the models directory.
     """
+    
+    response = requests.get(
+        f"{API_URL}/models",
+        timeout=30
+    )
 
-    models = []
+    response.raise_for_status()
 
-    models_root = Path("models")
-
-    if not models_root.exists():
-        return models
-
-    for family_dir in models_root.iterdir():
-
-        if not family_dir.is_dir():
-            continue
-
-        for model_file in family_dir.glob("*.onnx"):
-            models.append(model_file.stem)
-
-    return sorted(models)
+    return response.json()["models"]
 
 
 def call_prediction_api(uploaded_file, model_name):

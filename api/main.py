@@ -11,6 +11,7 @@ app = FastAPI(
 UPLOAD_DIR = Path("data/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+# helpers
 
 def resolve_model_path(model_name: str):
 
@@ -32,11 +33,29 @@ def resolve_model_path(model_name: str):
 
     return str(matches[0])
 
+def get_available_models():
+
+    model_files = Path("models").rglob("*.onnx")
+
+    return sorted(
+        model_file.stem
+        for model_file in model_files
+    )
+
+
+# endpoints
 
 @app.get("/")
 def root():
     return {
         "message": "Face Mask Detection API"
+    }
+
+@app.get("/models")
+def list_models():
+
+    return {
+        "models": get_available_models()
     }
 
 @app.post("/predict")
