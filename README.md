@@ -11,10 +11,13 @@ The project includes:
 * Command-line prediction module
 * FastAPI-based inference service
 * Dockerized deployment
+* Docker Hub image registry
 * Kubernetes orchestration using K3s
-* experiment tracking with MLflow
+* Traefik ingress routing
+* MLflow experiment tracking
+* Streamlit-based web demo application
 
-Future work includes CI/CD automation, Streamlit-based visualization, and Kubeflow integration.
+Future work may include CI/CD automation, Kubeflow integration.
 
 ---
 
@@ -32,9 +35,11 @@ Future work includes CI/CD automation, Streamlit-based visualization, and Kubefl
 ├── notebooks/
 ├── reports/
 ├── src/
+│   ├── demo/
 │   ├── inference/
 │   └── tracking/
 ├── Dockerfile
+├── Dockerfile.streamlit
 ├── requirements.txt
 └── README.md
 ```
@@ -109,6 +114,15 @@ Open Swagger UI:
 ```text
 http://127.0.0.1:8000/docs
 ```
+
+### Available Endpoints
+
+| Method | Endpoint | Description |
+|----------|----------|----------|
+| GET | / | Health check |
+| GET | /models | List available models |
+| POST | /predict | Run inference |
+
 
 ### Predict Endpoint
 
@@ -212,6 +226,108 @@ Check resources:
 ```bash
 kubectl get all -n facemask
 ```
+---
+
+## Streamlit Demo Application
+
+The project includes a lightweight Streamlit frontend for demonstrating model inference.
+
+### Features
+
+* Upload image files (`jpg`, `jpeg`, `png`)
+* Select available models dynamically from the API
+* Run inference using deployed FastAPI service
+* Visualize detected bounding boxes
+* Display prediction metadata and detection results
+
+### Run Locally
+
+```bash
+streamlit run src/demo/app.py
+```
+
+Open:
+
+```text
+http://localhost:8501
+```
+
+### Docker
+
+Build image:
+
+```bash
+docker build -f Dockerfile.streamlit -t facemask-demo:latest .
+```
+
+Run container:
+
+```bash
+docker run -p 8501:8501 \
+  -e API_URL=http://localhost:8000 \
+  facemask-demo:latest
+```
+
+### Docker Hub
+
+```text
+ngdangkhoa/facemask-demo:v2
+```
+
+Pull image:
+
+```bash
+docker pull ngdangkhoa/facemask-demo:v2
+```
+
+---
+
+## Streamlit Kubernetes Deployment
+
+### Streamlit Deployment
+
+```bash
+kubectl apply -f deployment/deployment-streamlit.yaml
+kubectl apply -f deployment/service-streamlit.yaml
+```
+
+### Ingress
+
+```bash
+kubectl apply -f deployment/ingress.yaml
+```
+
+### Verify Resources
+
+```bash
+kubectl get all -n facemask
+```
+
+---
+
+## Deployment Architecture
+
+```text
+                     Browser
+                         │
+                         ▼
+                 Traefik Ingress
+                         │
+        ┌────────────────┴────────────────┐
+        │                                 │
+        ▼                                 ▼
+   Streamlit UI                    FastAPI API
+        │                                 │
+        └──────────────┬──────────────────┘
+                       ▼
+                 ONNX Runtime
+                       │
+                       ▼
+                YOLO ONNX Models
+```
+
+---
+
 
 ## MLflow Experiment Tracking
 
@@ -287,26 +403,22 @@ Artifacts:
 * Exported ONNX model
 
 ---
+## Demo Endpoints
 
-## Deployment Architecture
+### FastAPI Swagger
 
 ```text
-Client
-   │
-   ▼
-Traefik Ingress
-   │
-   ▼
-Kubernetes Service
-   │
-   ▼
-FastAPI Pod
-   │
-   ▼
-ONNX Runtime
-   │
-   ▼
-YOLO ONNX Models
+http://192.168.28.30/docs
+```
+
+### Streamlit Demo
+```text
+http://192.168.28.30/
+```
+
+### MLflow Tracking UI
+```text
+http://192.168.28.30/5000
 ```
 
 ---
@@ -314,13 +426,13 @@ YOLO ONNX Models
 ## MLOps Workflow
 
 ```text
-Training (YOLO)
+YOLO Training
+      │
+      ▼
+Training Reports
       │
       ▼
 Export ONNX Model
-      │
-      ▼
-MLflow Tracking
       │
       ▼
 Docker Image
@@ -331,8 +443,9 @@ Docker Hub
       ▼
 Kubernetes (K3s)
       │
-      ▼
-FastAPI Inference Service
+      ├────────► FastAPI Service
+      │
+      └────────► Streamlit Demo
 ```
 
 ---
@@ -344,6 +457,7 @@ FastAPI Inference Service
 * ONNX Runtime
 * OpenCV
 * FastAPI
+* Streamlit
 * Docker
 * Docker Hub
 * Kubernetes (K3s)
@@ -361,25 +475,20 @@ FastAPI Inference Service
 * [x] Image upload endpoint
 * [x] Multi-model inference
 * [x] Docker containerization
-* [x] Server deployment
 * [x] Docker Hub integration
+* [x] Linux server deployment
 * [x] K3s installation
 * [x] Kubernetes Deployment
 * [x] Kubernetes Service
 * [x] Traefik Ingress
 * [x] MLflow experiment tracking
+* [x] Streamlit demo application
+* [x] Streamlit deployment on Kubernetes
 
-### In Progress
+### Future improvements
 
-* [ ] Streamlit demo application
-
-### Planned
-
-* [ ] Model registry with MLflow
+* [ ] MLflow Model Registry
 * [ ] CI/CD pipeline
 * [ ] Automated retraining workflow
-* [ ] Kubeflow integration
-* [ ] Kubeflow Pipelines
 
-```
-```
+---
